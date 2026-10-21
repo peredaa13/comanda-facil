@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comanda Fácil — Protótipo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#101827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Comanda Fácil">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--ink:#182230;--muted:#687386;--line:#e4e8ef;--brand:#2563eb;--brand2:#1d4ed8;--green:#16845b;--orange:#b45309;--red:#b91c1c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--brand);color:white;font-weight:650}button:hover{background:var(--brand2)}button.secondary{background:#eef2f7;color:#243044}button.danger{background:#fee2e2;color:#991b1b}button.small{padding:6px 9px;font-size:13px}
+header{background:#101827;color:#fff;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800}.logo{display:grid;place-items:center;background:#2563eb;width:38px;height:38px;border-radius:11px}
+header .sub{color:#cbd5e1;font-size:12px;font-weight:500}
+.wrap{max-width:1400px;margin:auto;padding:20px}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.nav button{background:#e5eaf2;color:#273244}.nav button.active{background:var(--brand);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px;min-width:0}.span12{grid-column:span 12}.span8{grid-column:span 8}.span7{grid-column:span 7}.span6{grid-column:span 6}.span5{grid-column:span 5}.span4{grid-column:span 4}.span3{grid-column:span 3}
+h1,h2,h3,p{margin-top:0}h1{font-size:25px;margin-bottom:5px}h2{font-size:18px;margin-bottom:13px}h3{font-size:15px;margin-bottom:8px}.muted{color:var(--muted)}.tiny{font-size:12px}.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.between{display:flex;align-items:center;justify-content:space-between;gap:10px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.stat .n{font-size:26px;font-weight:800;margin-top:3px}.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:750;background:#e8eefb;color:#244e9a}.pill.green{background:#dcfce7;color:#166534}.pill.orange{background:#ffedd5;color:#9a3412}.pill.red{background:#fee2e2;color:#991b1b}
+input,select,textarea{width:100%;border:1px solid #cfd6e2;border-radius:9px;padding:10px;background:#fff;color:var(--ink)}label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px}.field{margin-bottom:12px}.field.inline{flex:1;min-width:140px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line);vertical-align:middle}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}td{font-size:14px}.right{text-align:right}.empty{padding:24px;text-align:center;color:var(--muted)}
+.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.product{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;text-align:left;color:var(--ink)}.product:hover{border-color:var(--brand);background:#f8fbff}.product strong{display:block}.product .price{color:var(--green);font-weight:800;margin-top:5px}
+.notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:12px;border-radius:10px;font-size:13px}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px;border-radius:10px;font-size:13px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.hidden{display:none!important}.scanrow{display:flex;gap:8px}.scanrow input{flex:1}.total{font-size:25px;font-weight:850}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px 10px}
+@media(max-width:850px){.span8,.span7,.span6,.span5,.span4,.span3{grid-column:span 12}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:12px}.card{padding:14px}header{padding:12px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.product-grid{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:11px}.stat .n{font-size:22px}table{font-size:12px}th,td{padding:8px 4px}}
+.ov{position:fixed;inset:0;background:#101827ee;display:grid;place-items:center;z-index:50;padding:16px}.ov .box{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:400px}.ov video{width:100%;border-radius:12px;background:#000;max-height:55vh;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="ov" id="loginOv"><form class="box" id="loginForm"><h1>Comanda Fácil</h1><p class="muted">Entre com seu login e senha.</p><div class="field"><label>Login</label><input id="lLogin" autocomplete="username" required></div><div class="field"><label>Senha</label><input id="lPass" type="password" autocomplete="current-password" required></div><div id="lErr" class="warn hidden" style="margin-bottom:12px"></div><button style="width:100%">Entrar</button><p class="tiny muted" style="margin-top:10px">Peça seu login e senha ao administrador.</p></form></div>
+<div class="ov hidden" id="camOv"><div class="box"><h2 id="camTitle">Ler código de barras</h2><video id="camVideo" playsinline muted></video><p class="tiny muted" id="camMsg"></p><button class="secondary" id="camClose" style="width:100%">Cancelar</button></div></div>
+<header>
+  <div class="brand"><div class="logo">▦</div><div>Comanda Fácil<div class="sub">Protótipo funcional · comandas por código de barras</div></div></div>
+  <div class="row"><span class="sub" id="whoami"></span><button class="secondary small" id="logoutBtn">Sair</button></div>
+</header>
+<main class="wrap">
+  <div class="nav" id="nav">
+    <button data-view="garcom" class="active">📱 Garçom</button>
+    <button data-view="caixa">🧾 Caixa</button>
+    <button data-view="admin">⚙️ Administração</button>
+    <button data-view="cozinha">🍳 Cozinha / Bar</button>
+  </div>
+  <section id="dashboard">
+    <div class="stats">
+      <div class="stat"><div class="muted tiny">Comandas abertas</div><div class="n" id="statOpen">0</div></div>
+      <div class="stat"><div class="muted tiny">Consumo em aberto</div><div class="n" id="statTotal">R$ 0,00</div></div>
+      <div class="stat"><div class="muted tiny">Pedidos aguardando preparo</div><div class="n" id="statKitchen">0</div></div>
+      <div class="stat"><div class="muted tiny">Vendas pagas hoje</div><div class="n" id="statPaid">R$ 0,00</div></div>
+    </div>
+  </section>
+  <section id="view-garcom" class="view">
+    <div class="grid">
+      <div class="card span5">
+        <h1>Nova venda / lançar consumo</h1><p class="muted">Leia o cartão individual do cliente para abrir a comanda existente ou iniciar uma nova.</p>
+        <div class="field"><label for="barcodeInput">Código de barras do cartão</label><div class="scanrow"><input id="barcodeInput" placeholder="Ex.: 100001" autocomplete="off"><button id="scanBtn">Localizar</button><button class="secondary" id="camBtn" title="Ler com a câmera">📷</button></div><div class="tiny muted" style="margin-top:5px">Leitor USB normalmente digita o código e envia Enter. Também é possível digitar manualmente neste protótipo.</div></div>
+        <div class="row" style="margin-bottom:14px"><button class="secondary small" data-card="100001">Cartão 100001</button><button class="secondary small" data-card="100002">Cartão 100002</button><button class="secondary small" data-card="100003">Cartão 100003</button></div>
+        <div id="selectedComanda" class="notice">Nenhuma comanda selecionada. Leia um cartão para começar.</div>
+        <div id="openNewWrap" class="hidden" style="margin-top:12px"><div class="field"><label for="customerName">Nome / identificação do cliente (opcional)</label><input id="customerName" placeholder="Ex.: Cliente da mesa 4"></div><button id="openComandaBtn">Abrir comanda deste cartão</button></div>
+        <div id="activeOrder" class="hidden" style="margin-top:14px">
+          <div class="between"><h2>Consumo atual</h2><span id="orderStatus" class="pill green">Aberta</span></div>
+          <div id="currentItems"></div>
+          <div class="between" style="margin-top:12px"><span class="muted">Total parcial</span><span id="currentTotal" class="total">R$ 0,00</span></div>
+          <div class="warn tiny" style="margin-top:12px">Remover um item já enviado pede confirmação e fica registrado no controle de lançamentos. Avise a cozinha/bar quando isso acontecer.</div>
+        </div>
+      </div>
+      <div class="card span7">
+        <div class="section-title"><div><h1>Produtos</h1><p class="muted">Toque em um produto para adicionar uma unidade à comanda selecionada.</p></div></div>
+        <div class="field"><label for="productSearch">Buscar produto</label><input id="productSearch" placeholder="Digite nome ou categoria…"></div>
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+    </div>
+  </section>
+  <section id="view-caixa" class="view hidden">
+    <div class="grid">
+      <div class="card span8">
+        <div class="section-title"><div><h1>Comandas em andamento</h1><p class="muted">Localize uma conta, confira o consumo e receba o pagamento.</p></div><button class="secondary" id="refreshCashier">Atualizar</button></div>
+        <div class="field"><label for="cashierScan">Ler cartão para localizar conta</label><div class="scanrow"><input id="cashierScan" placeholder="Código de barras"><button id="cashierFind">Buscar</button><button class="secondary" id="camCashBtn" title="Ler com a câmera">📷</button></div></div>
+        <div style="overflow-x:auto"><table><thead><tr><th>Cartão</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody id="cashierRows"></tbody></table></div>
+      </div>
+      <div class="card span4">
+        <h2>Fechar conta</h2><div id="checkoutPanel" class="empty">Selecione uma comanda aberta na lista ou leia o cartão.</div>
+      </div>
+      <div class="card span12">
+        <div class="section-title"><div><h2>Controle de caixa</h2><p class="muted">Abertura, suprimento, sangria e fechamento são demonstrativos nesta versão.</p></div><span id="cashStatus" class="pill orange">Caixa fechado</span></div>
+        <div class="row"><div class="field inline"><label>Valor inicial (R$)</label><input id="openingAmount" type="number" min="0" step=".01" placeholder="100,00"></div><button id="openCash">Abrir caixa</button><button class="secondary" id="cashMovement">Lançar movimentação</button><button class="danger" id="closeCash">Fechar caixa</button></div>
+        <div id="cashMessage" class="muted tiny">Abra o caixa para registrar o valor inicial.</div>
+      </div>
+      <div class="card span12"><h2>Relatório de caixa</h2><p class="muted">Entradas, saídas, baixas e sangrias do período escolhido.</p><div class="row"><div class="field inline"><label>De</label><input type="date" id="rFrom"></div><div class="field inline"><label>Até</label><input type="date" id="rTo"></div><button id="rGen">Gerar relatório</button><button class="secondary" id="rPrint">Imprimir / PDF</button><button class="secondary" id="rCsv">Baixar CSV</button></div><div id="reportOut" style="margin-top:14px"></div></div>
+      <div class="card span12"><h2>Vendas finalizadas</h2><div style="overflow-x:auto"><table><thead><tr><th>Comanda</th><th>Cliente</th><th>Pagamento</th><th>Valor</th><th>Horário</th></tr></thead><tbody id="paidRows"></tbody></table></div></div>
+    </div>
+  </section>
+  <section id="view-admin" class="view hidden">
+    <div class="grid">
+      <div class="card span5"><h1>Cadastro de produtos</h1><p class="muted">Cadastre comidas, bebidas e defina em qual setor cada item deve ser impresso.</p>
+        <form id="productForm">
+          <div class="field"><label>Nome do produto</label><input id="pName" required placeholder="Ex.: Hambúrguer da casa"></div>
+          <div class="row"><div class="field inline"><label>Preço (R$)</label><input id="pPrice" type="number" min="0.01" step=".01" required placeholder="25,00"></div><div class="field inline"><label>Categoria</label><select id="pCategory"><option>Comidas</option><option>Bebidas</option><option>Sobremesas</option><option>Outros</option></select></div></div>
+          <div class="field"><label>Setor de impressão</label><select id="pSector"><option value="cozinha">Cozinha</option><option value="bar">Bar</option><option value="sem">Sem impressão</option></select></div>
+          <button type="submit">Adicionar produto</button>
+        </form>
+      </div>
+      <div class="card span7"><h2>Produtos cadastrados</h2><div style="overflow-x:auto"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Setor</th><th>Preço</th><th></th></tr></thead><tbody id="adminProducts"></tbody></table></div></div>
+      <div class="card span6"><h2>Cartões individuais</h2><p class="muted">Cada código representa um cartão físico. Os cartões de demonstração abaixo já estão cadastrados.</p><div id="cardList"></div><div class="row" style="margin-top:12px"><div class="field inline"><label>Número do cartão</label><input id="newCardCode" placeholder="Ex.: 100004"></div><div class="field inline"><label>Número da mesa</label><input id="newCardMesa" placeholder="Ex.: 7"></div><button id="addCard">Cadastrar cartão</button></div><button class="secondary" id="printCards">Imprimir lista de cartões</button></div>
+      <div class="card span6"><h2>Perfis de funcionários</h2><p class="muted">Crie login e senha para cada garçom, caixa ou administrador.</p><form id="userForm"><div class="row"><div class="field inline"><label>Nome</label><input id="uName" required placeholder="Ex.: Flávio"></div><div class="field inline"><label>Perfil</label><select id="uRole"><option value="garcom">Garçom</option><option value="caixa">Caixa</option><option value="admin">Administrador</option></select></div></div><div class="row"><div class="field inline"><label>Login</label><input id="uLogin" required autocomplete="off"></div><div class="field inline"><label>Senha</label><input id="uPass" type="password" required minlength="6" autocomplete="new-password"></div></div><button type="submit">Criar perfil</button></form><div style="overflow-x:auto;margin-top:12px"><table><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th></th></tr></thead><tbody id="userRows"></tbody></table></div></div>
+      <div class="card span12"><div class="section-title"><div><h2>Controle de lançamentos</h2><p class="muted">Cada abertura de comanda e item lançado fica registrado com o funcionário responsável.</p></div><div style="min-width:200px"><select id="logFilter"></select></div></div><div id="logSummary" class="row" style="margin-bottom:10px"></div><div style="overflow-x:auto"><table><thead><tr><th>Horário</th><th>Funcionário</th><th>Cartão</th><th>Ação</th></tr></thead><tbody id="logRows"></tbody></table></div></div>
+    </div>
+  </section>
+  <section id="view-cozinha" class="view hidden">
+    <div class="card">
+      <div class="section-title"><div><h1>Fila de preparo</h1><p class="muted">Pedidos agrupados por setor. A impressão automática real exige configurar uma impressora e um serviço de impressão.</p></div><button class="secondary" id="printQueue">Imprimir resumo geral</button></div>
+      <div class="row" style="margin-bottom:14px"><button class="active" data-sector-filter="todos">Todos</button><button class="secondary" data-sector-filter="cozinha">Cozinha</button><button class="secondary" data-sector-filter="bar">Bar</button></div>
+      <div id="kitchenQueue"></div>
+    </div>
+  </section>
+  <footer>Protótipo local para avaliação de fluxo. Os dados ficam neste navegador; não use para operação comercial real.</footer>
+</main>
+<script>
+const initialProducts=[
+{id:1,name:"Hambúrguer da casa",price:28.00,category:"Comidas",sector:"cozinha",active:true},
+{id:2,name:"Batata frita",price:18.00,category:"Comidas",sector:"cozinha",active:true},
+{id:3,name:"Pizza individual",price:32.00,category:"Comidas",sector:"cozinha",active:true},
+{id:4,name:"Refrigerante lata",price:6.00,category:"Bebidas",sector:"bar",active:true},
+{id:5,name:"Água mineral",price:4.00,category:"Bebidas",sector:"bar",active:true},
+{id:6,name:"Suco natural",price:9.00,category:"Bebidas",sector:"bar",active:true},
+{id:7,name:"Pudim",price:10.00,category:"Sobremesas",sector:"cozinha",active:true}
+];
+const initialCards=["100001","100002","100003"];
+const $=id=>document.getElementById(id);
+const money=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const timeNow=()=>new Date().toLocaleString("pt-BR");
+let products=[],cards=[],orders=[],paid=[],cash={open:false,opening:0,movements:[]},users=[],log=[],cashLog=[],tables={},me=null;
+let selectedCode="",selectedOrderId=null,checkoutId=null,sectorFilter="todos",role="garcom";
+function load(k,fallback){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(fallback)}catch(e){return structuredClone(fallback)}}
+function save(){q=q.then(sync).catch(e=>{fail(e);pull().then(renderAll)})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function orderTotal(o){return o.items.reduce((s,i)=>s+i.price*i.qty,0)}
+function openOrders(){return orders.filter(o=>o.status==="open")}
+function findOpen(code){return openOrders().find(o=>o.code===String(code))}
+function getOrder(id){return orders.find(o=>o.id===id)}
+function setView(view){document.querySelectorAll(".view").forEach(e=>e.classList.add("hidden"));$("view-"+view).classList.remove("hidden");document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));renderAll()}
+function locateCard(code){code=String(code||"").trim();selectedCode=code;selectedOrderId=null;
+ if(!code){$("selectedComanda").textContent="Digite ou leia um código de cartão.";return}
+ if(!cards.includes(code)){ $("selectedComanda").innerHTML=`<strong>Cartão ${esc(code)} não cadastrado.</strong><br>Cadastre o cartão na área administrativa antes de utilizá-lo.`;$("openNewWrap").classList.add("hidden");$("activeOrder").classList.add("hidden");return}
+ let o=findOpen(code);
+ if(o){selectedOrderId=o.id;$("selectedComanda").innerHTML=`<strong>Comanda encontrada</strong><br>Cartão ${esc(code)}${mesaTxt(code)} · ${esc(o.customer||"Cliente")}`;$("openNewWrap").classList.add("hidden");$("activeOrder").classList.remove("hidden");renderCurrentOrder()}
+ else{$("selectedComanda").innerHTML=`<strong>Cartão ${esc(code)}${mesaTxt(code)} disponível</strong><br>Não há consumo aberto para este cartão.`;$("openNewWrap").classList.remove("hidden");$("activeOrder").classList.add("hidden")}
+}
+function openComanda(){if(!selectedCode||!cards.includes(selectedCode))return;let existing=findOpen(selectedCode);if(existing){selectedOrderId=existing.id;renderAll();return}
+ const o={id:"C"+Date.now().toString().slice(-8),code:selectedCode,customer:$("customerName").value.trim()||"Cliente",status:"open",created:timeNow(),items:[]};o.waiter=me.name;o.waiterId=me.id;orders.push(o);addLog(o,"Abriu comanda");selectedOrderId=o.id;$("customerName").value="";save();renderAll();$("selectedComanda").innerHTML=`<strong>Comanda aberta</strong><br>Cartão ${esc(selectedCode)}${mesaTxt(selectedCode)} · ${esc(o.customer)}`;$("openNewWrap").classList.add("hidden");$("activeOrder").classList.remove("hidden");renderCurrentOrder()}
+function addItem(productId){let o=getOrder(selectedOrderId);if(!o||o.status!=="open"){alert("Leia um cartão e abra uma comanda antes de lançar produtos.");return}
+ let p=products.find(x=>x.id===productId&&x.active);if(!p)return;
+ let item=o.items.find(i=>i.productId===p.id&&i.status==="novo");
+ if(item)item.qty++;else o.items.push({id:"I"+Date.now()+Math.random().toString(16).slice(2,5),productId:p.id,name:p.name,price:p.price,category:p.category,sector:p.sector,qty:1,status:"novo",sentAt:null,by:me.name});addLog(o,"Lançou 1× "+p.name);
+ save();renderAll();$("activeOrder").classList.remove("hidden")}
+function sendItems(){let o=getOrder(selectedOrderId);if(!o)return;let fresh=o.items.filter(i=>i.status==="novo");if(!fresh.length){alert("Não há itens novos para enviar.");return}
+ fresh.forEach(i=>{i.status="enviado";i.sentAt=timeNow()});addLog(o,"Enviou "+fresh.length+" linha(s) para preparo");save();renderAll();alert("Itens enviados para a fila da cozinha/bar. A impressão física precisa de integração com impressora.")}
+function renderCurrentOrder(){let o=getOrder(selectedOrderId);if(!o){$("activeOrder").classList.add("hidden");return}
+ $("orderStatus").textContent="Aberta";$("currentTotal").textContent=money(orderTotal(o));
+ if(!o.items.length){$("currentItems").innerHTML='<div class="empty">Nenhum item lançado ainda.</div>';return}
+ $("currentItems").innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Item</th><th>Qtd.</th><th>Subtotal</th><th>Status</th><th></th></tr></thead><tbody>${o.items.map(i=>`<tr><td>${esc(i.name)}</td><td style="white-space:nowrap"><button class="secondary small" data-dec="${i.id}">−</button> <strong>${i.qty}</strong> <button class="secondary small" data-inc="${i.id}">+</button></td><td>${money(i.qty*i.price)}</td><td><span class="pill ${i.status==="enviado"?"green":"orange"}">${i.status==="enviado"?"Enviado":"Novo"}</span></td><td><button class="danger small" data-del="${i.id}" title="Excluir item">🗑</button></td></tr>`).join("")}</tbody></table></div><div class="actions" style="margin-top:12px"><button id="sendItemsBtn">Enviar itens para preparo</button><button class="secondary" id="printPreviewBtn">Prévia de impressão</button></div>`;
+ document.querySelectorAll("[data-dec]").forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));document.querySelectorAll("[data-inc]").forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delItem(b.dataset.del));$("sendItemsBtn").onclick=sendItems;$("printPreviewBtn").onclick=()=>printOrder(o)}
+function printOrder(o){let items=o.items.filter(i=>i.status==="enviado");if(!items.length){alert("Ainda não há itens enviados para preparo.");return}let by={};items.forEach(i=>{if(i.sector!=="sem"){(by[i.sector]??=[]).push(i)}});let w=window.open("","_blank","width=480,height=650");if(!w){alert("Permita pop-ups para visualizar a prévia de impressão.");return}w.document.write(`<html><head><title>Pedido ${esc(o.id)}</title><style>body{font:16px monospace;padding:18px}h2{text-align:center}hr{border:0;border-top:1px dashed}</style></head><body><h2>${Object.keys(by).map(s=>s.toUpperCase()).join(" / ")||"PEDIDO"}</h2><p>Comanda: ${esc(o.id)}<br>Cartão: ${esc(o.code)}${tables[o.code]?" · Mesa "+esc(tables[o.code]):""}<br>Cliente: ${esc(o.customer)}<br>${esc(timeNow())}</p><hr>${Object.entries(by).map(([s,its])=>`<h3>${s.toUpperCase()}</h3>${its.map(i=>`<p>${i.qty}x ${esc(i.name)}</p>`).join("")}`).join("")}<hr><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
+function renderProducts(){let q=$("productSearch").value.toLowerCase();let arr=products.filter(p=>p.active&&(p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)));$("productGrid").innerHTML=arr.map(p=>`<button class="product" data-add="${p.id}"><strong>${esc(p.name)}</strong><span class="muted tiny">${esc(p.category)} · ${p.sector==="cozinha"?"Cozinha":p.sector==="bar"?"Bar":"Sem impressão"}</span><span class="price">${money(p.price)}</span></button>`).join("")||'<div class="empty">Nenhum produto encontrado.</div>';document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>addItem(Number(b.dataset.add)))}
+function renderCashier(){let arr=openOrders();$("cashierRows").innerHTML=arr.map(o=>`<tr><td><strong>${esc(o.code)}</strong><div class="tiny muted">${esc(o.id)}${mesaTxt(o.code)}</div></td><td>${esc(o.customer)}</td><td>${o.items.reduce((n,i)=>n+i.qty,0)}</td><td><strong>${money(orderTotal(o))}</strong></td><td><span class="pill green">Aberta</span></td><td><button class="small" data-checkout="${o.id}">Fechar</button></td></tr>`).join("")||'<tr><td colspan="6" class="empty">Nenhuma comanda aberta.</td></tr>';document.querySelectorAll("[data-checkout]").forEach(b=>b.onclick=()=>selectCheckout(b.dataset.checkout));
+ $("paidRows").innerHTML=paid.slice().reverse().map(p=>`<tr><td>${esc(p.id)}<div class="tiny muted">${esc(p.code)}</div></td><td>${esc(p.customer)}</td><td>${esc(p.payment)}</td><td>${money(p.total)}</td><td>${esc(p.time)}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Nenhuma venda finalizada.</td></tr>';
+ $("cashStatus").textContent=cash.open?"Caixa aberto":"Caixa fechado";$("cashStatus").className="pill "+(cash.open?"green":"orange");$("cashMessage").textContent=cash.open?`Caixa aberto com fundo inicial de ${money(cash.opening)}. Movimentações: ${cash.movements.length}.`:"Abra o caixa para registrar o valor inicial."}
+function selectCheckout(id){checkoutId=id;let o=getOrder(id);if(!o)return;$("checkoutPanel").innerHTML=`<div class="notice"><strong>${esc(o.customer)}</strong><br>Cartão ${esc(o.code)}${mesaTxt(o.code)} · ${esc(o.id)}${o.waiter?" · Garçom "+esc(o.waiter):""}</div><div style="margin:12px 0">${o.items.map(i=>`<div class="between" style="padding:6px 0;border-bottom:1px solid var(--line)"><span>${i.qty}× ${esc(i.name)}</span><strong>${money(i.qty*i.price)}</strong></div>`).join("")||'<p class="muted">Sem itens lançados.</p>'}</div><div class="between"><span>Total</span><span class="total">${money(orderTotal(o))}</span></div><div class="field" style="margin-top:14px"><label>Forma de pagamento</label><select id="paymentMethod"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Outro</option></select></div><button id="payBtn" style="width:100%">Confirmar pagamento e encerrar</button><p class="tiny muted" style="margin-top:10px">A confirmação é irreversível neste protótipo. Confira os itens antes de concluir.</p>`;$("payBtn").onclick=finishPayment}
+function finishPayment(){let o=getOrder(checkoutId);if(!o)return;if(!cash.open){if(!confirm("O caixa está fechado. Deseja registrar o pagamento mesmo assim neste protótipo?"))return}
+ if(!o.items.length){alert("Não é possível fechar uma comanda sem itens.");return}
+ let method=$("paymentMethod").value;paid.push({ts:Date.now(),id:o.id,code:o.code,customer:o.customer,total:orderTotal(o),payment:method,time:timeNow()});o.status="paid";o.closed=timeNow();o.payment=method;o.cashier=me.name;cl("venda",orderTotal(o),method+" · comanda "+o.id+" · cartão "+o.code+" · "+o.customer+(o.waiter?" · garçom "+o.waiter:""),method);checkoutId=null;save();renderAll();$("checkoutPanel").innerHTML='<div class="notice">Pagamento registrado e comanda encerrada. O cartão está disponível para uma nova utilização.</div>'}
+function renderAdmin(){ $("adminProducts").innerHTML=products.map(p=>`<tr><td>${esc(p.name)}${p.active?"":' <span class="pill red">Inativo</span>'}</td><td>${esc(p.category)}</td><td>${p.sector==="cozinha"?"Cozinha":p.sector==="bar"?"Bar":"Sem impressão"}</td><td>${money(p.price)}</td><td><button class="small ${p.active?"danger":"secondary"}" data-toggle-product="${p.id}">${p.active?"Inativar":"Reativar"}</button></td></tr>`).join("");
+ document.querySelectorAll("[data-toggle-product]").forEach(b=>b.onclick=()=>{let p=products.find(p=>p.id===Number(b.dataset.toggleProduct));p.active=!p.active;save();renderAll()});
+ $("cardList").innerHTML=cards.map(c=>`<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><span>▦ <strong>${esc(c)}</strong>${tables[c]?" · Mesa "+esc(tables[c]):""} <button class="small secondary" data-mesa="${esc(c)}">Mesa</button></span><span class="pill ${findOpen(c)?"orange":"green"}">${findOpen(c)?"Em uso":"Disponível"}</span></div>`).join("")}
+function renderKitchen(){let g={};openOrders().forEach(o=>o.items.filter(i=>i.status==="enviado"&&i.sector!=="sem").forEach(i=>{if(sectorFilter!=="todos"&&i.sector!==sectorFilter)return;((g[i.sector]??={})[o.id]??={o,items:[]}).items.push(i)}));
+ $("kitchenQueue").innerHTML=Object.keys(g).length?Object.entries(g).map(([s,os])=>`<div class="card" style="margin-bottom:12px"><div class="between"><h2>${s==="cozinha"?"🍳 Cozinha":"🥤 Bar"}</h2><span class="pill orange">${Object.keys(os).length} comanda(s)</span></div>${Object.values(os).map(({o,items})=>`<div style="border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px"><div class="between"><div><strong>Cartão ${esc(o.code)}${mesaTxt(o.code)}</strong><div class="tiny muted">${esc(o.customer)}${o.waiter?" · Garçom "+esc(o.waiter):""}</div></div><div class="row">${items.every(i=>i.printed)?'<span class="pill green">Impresso</span>':'<span class="pill orange">Pendente</span>'}<button class="small" data-tk="${o.id}|${s}">🖨 Imprimir</button></div></div>${items.map(i=>`<div class="between" style="padding:6px 0;border-top:1px solid var(--line)"><span>${i.qty}× ${esc(i.name)}${i.printed?"":' <span class="pill orange">novo</span>'}</span><span class="tiny muted">${esc(i.sentAt)}</span></div>`).join("")}</div>`).join("")}</div>`).join(""):'<div class="empty">Nenhum item enviado para preparo neste setor.</div>';
+ document.querySelectorAll("[data-tk]").forEach(b=>b.onclick=()=>{let [id,sec]=b.dataset.tk.split("|");printTicket(id,sec)})}
+function printTicket(id,s){let o=getOrder(id),all=o.items.filter(i=>i.status==="enviado"&&i.sector===s),its=all.filter(i=>!i.printed);if(!its.length){if(!confirm("Todos os itens desta comanda já foram impressos. Imprimir novamente?"))return;its=all}
+ let w=window.open("","_blank","width=480,height=650");if(!w){alert("Permita pop-ups para imprimir.");return}
+ w.document.write(`<html><head><title>${s} ${esc(o.code)}</title><style>body{font:16px monospace;padding:18px}h1,h2{text-align:center;margin:4px 0}hr{border:0;border-top:1px dashed}</style></head><body><h1>${s==="cozinha"?"COZINHA":"BAR"}</h1><h2>CARTÃO ${esc(o.code)}</h2>${tables[o.code]?"<h2>MESA "+esc(tables[o.code])+"</h2>":""}<p>Cliente: ${esc(o.customer)}<br>Garçom: ${esc(o.waiter||"-")}<br>${esc(timeNow())}</p><hr>${its.map(i=>`<p style="font-size:20px">${i.qty}x ${esc(i.name)}</p>`).join("")}<hr><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();its.forEach(i=>i.printed=true);save();renderKitchen()}
+function renderDashboard(){let os=openOrders();$("statOpen").textContent=os.length;$("statTotal").textContent=money(os.reduce((s,o)=>s+orderTotal(o),0));$("statKitchen").textContent=os.reduce((s,o)=>s+o.items.filter(i=>i.status==="enviado"&&i.sector!=="sem").length,0);$("statPaid").textContent=money(paid.reduce((s,p)=>s+p.total,0))}
+function renderAll(){renderDashboard();renderProducts();renderCashier();renderAdmin();renderUsers();renderKitchen();if(selectedOrderId&&getOrder(selectedOrderId)?.status==="open"){renderCurrentOrder();$("activeOrder").classList.remove("hidden")}}
+$("scanBtn").onclick=()=>locateCard($("barcodeInput").value);$("barcodeInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();locateCard(e.target.value)}});
+document.querySelectorAll("[data-card]").forEach(b=>b.onclick=()=>{$("barcodeInput").value=b.dataset.card;locateCard(b.dataset.card)});
+$("openComandaBtn").onclick=openComanda;$("productSearch").oninput=renderProducts;
+$("cashierFind").onclick=()=>{let code=$("cashierScan").value.trim(),o=findOpen(code);if(!o){$("checkoutPanel").innerHTML=`<div class="warn">Nenhuma comanda aberta para o cartão ${esc(code)}.</div>`;return}selectCheckout(o.id)};
+$("cashierScan").addEventListener("keydown",e=>{if(e.key==="Enter")$("cashierFind").click()});$("refreshCashier").onclick=renderAll;
+$("productForm").onsubmit=e=>{e.preventDefault();products.push({id:Math.max(0,...products.map(p=>p.id))+1,name:$("pName").value.trim(),price:Number($("pPrice").value),category:$("pCategory").value,sector:$("pSector").value,active:true});save();e.target.reset();renderAll();alert("Produto cadastrado.")};
+$("addCard").onclick=()=>{let c=$("newCardCode").value.trim();if(!/^[A-Za-z0-9-]{3,30}$/.test(c)){alert("Informe um código com 3 a 30 letras, números ou hífens.");return}if(cards.includes(c)){alert("Esse código já está cadastrado.");return}cards.push(c);let m=$("newCardMesa").value.trim();if(m)tables[c]=m;save();$("newCardCode").value="";$("newCardMesa").value="";renderAll()};
+$("printCards").onclick=()=>{let w=window.open("","_blank");if(!w){alert("Permita pop-ups para imprimir.");return}w.document.write(`<html><head><title>Cartões de comanda</title><style>body{font:14px Arial;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{border:1px solid #aaa;padding:16px;text-align:center;page-break-inside:avoid}.bars{font:34px monospace;letter-spacing:-4px}</style></head><body>${cards.map(c=>`<div class="card"><b>COMANDA FÁCIL</b><div class="bars">▥▥▥▥▥▥▥</div><h2>${esc(c)}</h2>${tables[c]?"<b>MESA "+esc(tables[c])+"</b>":""}<small>Código de demonstração: imprima etiquetas de código de barras reais usando este número.</small></div>`).join("")}</body></html>`);w.document.close();w.print()};
+$("openCash").onclick=()=>{if(cash.open){alert("O caixa já está aberto.");return}let n=Number($("openingAmount").value);if(!Number.isFinite(n)||n<0){alert("Informe um valor inicial válido.");return}cash={open:true,opening:n,movements:[]};cl("abertura",n,"Fundo inicial");save();renderAll()};
+$("cashMovement").onclick=()=>{if(!cash.open){alert("Abra o caixa primeiro.");return}let type=prompt("Digite suprimento ou sangria:");if(!type)return;type=type.toLowerCase();if(!["suprimento","sangria"].includes(type)){alert("Tipo inválido.");return}let amount=Number(prompt("Valor da movimentação (R$):"));if(!Number.isFinite(amount)||amount<=0){alert("Valor inválido.");return}let why=prompt("Motivo (opcional):")||"";cash.movements.push({type,amount,time:timeNow()});cl(type,amount,why||"Sem motivo informado");save();renderAll()};
+$("closeCash").onclick=()=>{if(!cash.open){alert("O caixa já está fechado.");return}if(!confirm("Confirma o fechamento do caixa?"))return;cash.open=false;cash.lastClosed=timeNow();cl("fechamento",0,"Caixa fechado");save();renderAll();alert("Caixa fechado neste protótipo.")};
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{let v=b.dataset.view;let allowed=role==="admin"?["admin","caixa","garcom","cozinha"]:role==="caixa"?["caixa","cozinha"]:["garcom","cozinha"];if(!allowed.includes(v)){alert("Este perfil não tem acesso a essa área na demonstração.");return}setView(v)});
+document.querySelectorAll("[data-sector-filter]").forEach(b=>b.onclick=()=>{sectorFilter=b.dataset.sectorFilter;document.querySelectorAll("[data-sector-filter]").forEach(x=>{x.className=x===b?"":"secondary"});renderKitchen()});
+$("printQueue").onclick=()=>{let w=window.open("","_blank");if(!w){alert("Permita pop-ups para imprimir.");return}w.document.write(`<html><head><title>Fila de preparo</title><style>body{font:15px monospace;padding:18px}hr{border:0;border-top:1px dashed}</style></head><body><h2>FILA DE PREPARO</h2>${$("kitchenQueue").innerText.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")}<script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()};
+function H(s){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<s.length;i++){let c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^h1>>>16,2246822507)^Math.imul(h2^h2>>>13,3266489909);h2=Math.imul(h2^h2>>>16,2246822507)^Math.imul(h1^h1>>>13,3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
+function addLog(o,action){log.push({id:"L"+Date.now()+Math.random().toString(36).slice(2,6),ts:Date.now(),time:timeNow(),uid:me.id,name:me.name,code:o.code,order:o.id,action})}
+function cl(type,amount,desc,method){cashLog.push({id:"X"+Date.now()+Math.random().toString(36).slice(2,6),ts:Date.now(),time:timeNow(),type,amount,desc,method:method||"",user:me?.name||"-"})}
+const roleName={garcom:"Garçom",caixa:"Caixa",admin:"Administrador"};
+function applyRole(){let allowed=role==="admin"?["garcom","caixa","admin","cozinha"]:role==="caixa"?["caixa","cozinha"]:["garcom","cozinha"];document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("hidden",!allowed.includes(b.dataset.view)));$("whoami").textContent=me.name+" · "+roleName[role];setView(role==="admin"?"admin":role==="caixa"?"caixa":"garcom")}
+$("loginForm").onsubmit=e=>{e.preventDefault();let l=$("lLogin").value.trim().toLowerCase(),u=users.find(x=>x.login===l&&x.active&&x.hash===H(l+":"+$("lPass").value));if(!u){$("lErr").textContent="Login ou senha incorretos.";$("lErr").classList.remove("hidden");return}me=u;role=u.role;sessionStorage.setItem("cf_me",u.id);$("lPass").value="";$("lErr").classList.add("hidden");$("loginOv").classList.add("hidden");applyRole()};
+$("logoutBtn").onclick=()=>{releaseCam();me=null;sessionStorage.removeItem("cf_me");selectedCode="";selectedOrderId=null;$("loginOv").classList.remove("hidden")};
+$("userForm").onsubmit=e=>{e.preventDefault();let login=$("uLogin").value.trim().toLowerCase();if(users.some(u=>u.login===login)){alert("Esse login já existe.");return}users.push({id:"u"+Date.now(),name:$("uName").value.trim(),login,hash:H(login+":"+$("uPass").value),role:$("uRole").value,active:true});save();e.target.reset();renderAll();alert("Perfil criado.")};
+function mesaTxt(c){return tables[c]?" · Mesa "+esc(tables[c]):""}
+function renderUsers(){document.querySelectorAll("[data-mesa]").forEach(b=>b.onclick=()=>{let c=b.dataset.mesa,m=prompt("Número da mesa do cartão "+c+" (vazio para remover):",tables[c]||"");if(m===null)return;m=m.trim();if(m)tables[c]=m;else delete tables[c];save();renderAll()});$("userRows").innerHTML=users.map(u=>`<tr><td>${esc(u.name)}${u.active?"":' <span class="pill red">Inativo</span>'}</td><td>${esc(u.login)}</td><td>${roleName[u.role]}</td><td class="actions"><button class="small secondary" data-pw="${u.id}">Nova senha</button>${u.id===me?.id?"":`<button class="small ${u.active?"danger":"secondary"}" data-ua="${u.id}">${u.active?"Inativar":"Reativar"}</button>`}</td></tr>`).join("");
+ document.querySelectorAll("[data-pw]").forEach(b=>b.onclick=()=>{let u=users.find(x=>x.id===b.dataset.pw),p=prompt("Nova senha para "+u.name+" (mín. 6 caracteres):");if(p&&p.length>=6)db.rpc("admin_set_password",{uid:u.id,pass:p}).then(({error})=>alert(error?"Erro: "+error.message:"Senha alterada."))});
+ document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{let u=users.find(x=>x.id===b.dataset.ua);u.active=!u.active;save();renderAll()});
+ let sel=$("logFilter"),cur=sel.value;sel.innerHTML='<option value="">Todos os funcionários</option>'+users.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("");sel.value=cur;sel.onchange=renderUsers;
+ let rows=log.filter(l=>!cur||l.uid===cur).slice().reverse();
+ $("logSummary").innerHTML=users.filter(u=>!cur||u.id===cur).map(u=>{let l=log.filter(x=>x.uid===u.id);return`<span class="pill">${esc(u.name)}: ${l.filter(x=>x.action==="Abriu comanda").length} comanda(s) · ${l.filter(x=>x.action.startsWith("Lançou")).length} lançamento(s)</span>`}).join("");
+ $("logRows").innerHTML=rows.slice(0,300).map(l=>`<tr><td>${esc(l.time)}</td><td>${esc(l.name)}</td><td>${esc(l.code)}<div class="tiny muted">${esc(l.order)}</div></td><td>${esc(l.action)}</td></tr>`).join("")||'<tr><td colspan="4" class="empty">Nenhum lançamento registrado.</td></tr>'}
+function buildReport(){let f=$("rFrom").value,t=$("rTo").value,a=f?new Date(f+"T00:00:00").getTime():0,b=t?new Date(t+"T23:59:59").getTime():Infinity;let ev=cashLog.filter(e=>e.ts>=a&&e.ts<=b),sum=k=>ev.filter(e=>e.type===k).reduce((s,e)=>s+e.amount,0),sales=ev.filter(e=>e.type==="venda"),by={};sales.forEach(e=>by[e.method]=(by[e.method]||0)+e.amount);let ab=sum("abertura"),sup=sum("suprimento"),san=sum("sangria");return{ev,sales,by,ab,sup,san,tot:sum("venda"),esperado:ab+(by["Dinheiro"]||0)+sup-san}}
+function reportHTML(r){const L={abertura:"Abertura",venda:"Baixa (venda)",suprimento:"Suprimento (entrada)",sangria:"Sangria (saída)",fechamento:"Fechamento"};
+ return`<div class="stats"><div class="stat"><div class="muted tiny">Entradas (vendas)</div><div class="n">${money(r.tot)}</div></div><div class="stat"><div class="muted tiny">Suprimentos</div><div class="n">${money(r.sup)}</div></div><div class="stat"><div class="muted tiny">Sangrias (saídas)</div><div class="n">${money(r.san)}</div></div><div class="stat"><div class="muted tiny">Dinheiro esperado no caixa</div><div class="n">${money(r.esperado)}</div></div></div><p class="muted tiny">Fundo inicial: ${money(r.ab)} · Comandas baixadas: ${r.sales.length} · Por pagamento: ${Object.entries(r.by).map(([k,v])=>k+" "+money(v)).join(" · ")||"—"}</p><div style="overflow-x:auto"><table><thead><tr><th>Horário</th><th>Tipo</th><th>Descrição</th><th>Operador</th><th class="right">Valor</th></tr></thead><tbody>${r.ev.map(e=>`<tr><td>${esc(e.time)}</td><td>${L[e.type]}</td><td>${esc(e.desc)}</td><td>${esc(e.user)}</td><td class="right">${e.type==="sangria"?"− ":""}${money(e.amount)}</td></tr>`).join("")||'<tr><td colspan="5" class="empty">Sem movimentações no período.</td></tr>'}</tbody></table></div>`}
+$("rFrom").value=$("rTo").value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+$("rGen").onclick=()=>{$("reportOut").innerHTML=reportHTML(buildReport())};
+$("rPrint").onclick=()=>{let w=window.open("","_blank");if(!w){alert("Permita pop-ups para imprimir.");return}w.document.write(`<html><head><title>Relatório de caixa</title><style>body{font:13px Arial;padding:18px}table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #ccc;padding:5px;text-align:left}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{border:1px solid #ccc;padding:8px}.n{font-size:18px;font-weight:bold}.right{text-align:right}</style></head><body><h2>Relatório de caixa</h2><p>Período: ${esc($("rFrom").value||"início")} a ${esc($("rTo").value||"hoje")} · Emitido por ${esc(me.name)} em ${esc(timeNow())}</p>${reportHTML(buildReport())}<script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()};
+$("rCsv").onclick=()=>{let r=buildReport(),q=x=>'"'+String(x).replace(/"/g,'""')+'"',rows=[["Horário","Tipo","Descrição","Operador","Pagamento","Valor"],...r.ev.map(e=>[e.time,e.type,e.desc,e.user,e.method,(e.type==="sangria"?-e.amount:e.amount).toFixed(2).replace(".",",")])],a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+rows.map(x=>x.map(q).join(";")).join("\r\n")],{type:"text/csv"}));a.download="relatorio-caixa.csv";a.click()};
+let camStream=null,camTimer=null,camReader=null,camDet=null;
+function loadZX(){return window.ZXing?Promise.resolve():new Promise((ok,no)=>{let t=document.createElement("script");t.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";t.onload=ok;t.onerror=()=>no(new Error("não foi possível carregar o leitor alternativo (sem internet?)"));document.head.appendChild(t)})}
+function endScan(){clearInterval(camTimer);camTimer=null;try{camReader?.stopContinuousDecode()}catch(e){}camReader=null;$("camVideo").pause();$("camOv").classList.add("hidden")}
+function releaseCam(){endScan();camStream?.getTracks().forEach(t=>t.stop());camStream=null;$("camVideo").srcObject=null}
+async function scanCamera(title,cb){$("camTitle").textContent=title;$("camMsg").textContent="Aponte a câmera para o código de barras.";$("camOv").classList.remove("hidden");let fin=false,last="",hits=0;
+ const done=c=>{if(fin)return;fin=true;endScan();navigator.vibrate&&navigator.vibrate(120);cb(c)};
+ const feed=c=>{c=String(c).trim();if(!c)return;$("camMsg").textContent="Lendo: "+c;if(cards.includes(c)){done(c);return}if(c===last)hits++;else{last=c;hits=1}if(hits>=2)done(c)};
+ if(!navigator.mediaDevices?.getUserMedia){$("camMsg").textContent="Câmera indisponível. Abra o sistema por HTTPS (ou localhost) e permita o acesso à câmera.";return}
+ try{let tr=camStream?.getVideoTracks()[0];if(!tr||tr.readyState!=="live")camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+  let v=$("camVideo");v.srcObject=null;v.srcObject=camStream;await v.play();let fm=[];
+  if("BarcodeDetector" in window){try{let sup=await BarcodeDetector.getSupportedFormats();fm=["code_39","code_128","ean_13","ean_8","upc_a","qr_code"].filter(f=>sup.includes(f))}catch(e){fm=["code_39","code_128"]}}
+  if(fm.length){camDet=new BarcodeDetector({formats:fm});camTimer=setInterval(async()=>{if(fin||!v.videoWidth)return;try{let r=await camDet.detect(v);if(r.length)feed(r[0].rawValue)}catch(e){}},200)}
+  else{await loadZX();let Z=ZXing,B=Z.BarcodeFormat,h=new Map([[Z.DecodeHintType.POSSIBLE_FORMATS,[B.CODE_39,B.CODE_128,B.EAN_13,B.QR_CODE]],[Z.DecodeHintType.TRY_HARDER,true]]);camReader=new Z.BrowserMultiFormatReader(h,150);camReader.decodeFromStream(camStream,v,r=>{if(r)feed(r.getText())}).catch(e=>{$("camMsg").textContent="Erro no leitor: "+e.message})}}
+ catch(e){$("camMsg").textContent="Não foi possível abrir a câmera: "+(e.name==="NotAllowedError"?"permissão negada. Libere a câmera nas configurações do navegador para este site.":e.message)}}
+$("camClose").onclick=endScan;document.addEventListener("visibilitychange",()=>{if(document.hidden)releaseCam()});
+function changeQty(iid,d){let o=getOrder(selectedOrderId),i=o?.items.find(x=>x.id===iid);if(!i)return;
+ if(d>0){if(i.status==="enviado"){addItem(i.productId);return}i.qty++;addLog(o,"Lançou 1× "+i.name)}
+ else{if(i.status==="enviado"&&!confirm("Este item já foi enviado ao preparo"+(i.printed?" e impresso":"")+". Remover 1 unidade mesmo assim? Avise a cozinha/bar."))return;i.qty--;addLog(o,"Removeu 1× "+i.name+(i.status==="enviado"?" (já enviado)":""));if(i.qty<=0)o.items=o.items.filter(x=>x!==i)}
+ save();renderAll()}
+function delItem(iid){let o=getOrder(selectedOrderId),i=o?.items.find(x=>x.id===iid);if(!i)return;if(!confirm("Excluir "+i.qty+"× "+i.name+" da comanda?"+(i.status==="enviado"?" Já foi enviado ao preparo"+(i.printed?" e impresso":"")+": avise a cozinha/bar.":"")))return;o.items=o.items.filter(x=>x!==i);addLog(o,"Excluiu "+i.qty+"× "+i.name+(i.status==="enviado"?" (já enviado)":""));save();renderAll()}
+$("camBtn").onclick=()=>scanCamera("Ler cartão da comanda",c=>{$("barcodeInput").value=c;locateCard(c)});
+$("camCashBtn").onclick=()=>scanCamera("Ler cartão para dar baixa",c=>{$("cashierScan").value=c;$("cashierFind").click()});
+
+// ===== BANCO DE DADOS (Supabase) =====
+const SB_URL="https://wyvkohecollnxkycxcji.supabase.co",SB_KEY="sb_publishable_KFRfrEf07hJKtiC_o9tERg_f_-vkMue";
+const db=supabase.createClient(SB_URL,SB_KEY),db2=supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"cf_tmp"}});
+const T={products:()=>products.map(p=>[String(p.id),p]),cards:()=>cards.map(c=>[c,{mesa:tables[c]||""}]),orders:()=>orders.map(o=>[o.id,o]),paid:()=>paid.map(x=>[x.id,x]),cash_state:()=>[["main",cash]],cash_log:()=>cashLog.map(e=>[e.id,e]),activity_log:()=>log.map(e=>[e.id,e]),staff:()=>users.map(u=>[u.id,{name:u.name,login:u.login,role:u.role,active:u.active}])};
+const APPEND=new Set(["cash_log","activity_log"]);
+let q=Promise.resolve(),snap={},lastErr=0,rtCh=null,rtTimer=null;
+function fail(e,t){console.error(t,e);if(Date.now()-lastErr>5000){lastErr=Date.now();alert("Erro de comunicação com o banco"+(t?" ("+t+")":"")+": "+(e.message||e))}}
+const snapOf=t=>Object.fromEntries(T[t]().map(([k,v])=>[k,JSON.stringify(v)]));
+async function sync(){for(const t in T){let cur=snapOf(t),old=snap[t]||{};let up=Object.keys(cur).filter(k=>cur[k]!==old[k]&&!(APPEND.has(t)&&k in old)).map(k=>({id:k,data:JSON.parse(cur[k])})),del=APPEND.has(t)?[]:Object.keys(old).filter(k=>!(k in cur));snap[t]=cur;
+ if(up.length){let{error}=await db.from(t).upsert(up,APPEND.has(t)?{ignoreDuplicates:true}:{});if(error)throw error}
+ if(del.length){let{error}=await db.from(t).delete().in("id",del);if(error)throw error}}}
+async function pull(){let R={};await Promise.all(Object.keys(T).map(async t=>{let{data,error}=await db.from(t).select("id,data").limit(5000);if(error)fail(error,t);R[t]=data||[]}));
+ let byTs=(a,b)=>(a.ts||0)-(b.ts||0);
+ products=R.products.map(r=>r.data).sort((a,b)=>a.id-b.id);cards=R.cards.map(r=>r.id).sort();tables={};R.cards.forEach(r=>{if(r.data.mesa)tables[r.id]=r.data.mesa});
+ orders=R.orders.map(r=>r.data);paid=R.paid.map(r=>r.data).sort(byTs);let c=R.cash_state[0]?.data;cash=c&&c.movements?c:{open:false,opening:0,movements:[]};
+ cashLog=R.cash_log.map(r=>r.data).sort(byTs);log=R.activity_log.map(r=>r.data).sort(byTs);users=R.staff.map(r=>({id:r.id,...r.data}));
+ snap={};for(const t in T)snap[t]=snapOf(t)}
+function startRealtime(){if(rtCh)db.removeChannel(rtCh);rtCh=db.channel("cf").on("postgres_changes",{event:"*",schema:"public"},()=>{clearTimeout(rtTimer);rtTimer=setTimeout(()=>{q=q.then(pull).then(renderAll).catch(fail)},400)}).subscribe()}
+async function enter(user){let{data,error:er}=await db.from("staff").select("id,data").eq("id",user.id).maybeSingle();if(er){await db.auth.signOut();return"Erro no banco: "+er.message+" (rode o script supabase_setup.sql)"}if(!data||data.data.active===false){await db.auth.signOut();return"Este login não tem perfil ativo. Procure o administrador."}
+ me={id:user.id,name:data.data.name,login:data.data.login,role:data.data.role};role=me.role;await pull();
+ if(role==="admin"&&!products.length){products=structuredClone(initialProducts);save()}
+ $("loginOv").classList.add("hidden");applyRole();startRealtime();return""}
+$("loginForm").onsubmit=async e=>{e.preventDefault();let l=$("lLogin").value.trim().toLowerCase(),{data,error}=await db.auth.signInWithPassword({email:l.includes("@")?l:l+"@comandafacil.app",password:$("lPass").value});let msg=error?(/invalid login/i.test(error.message)?"Login ou senha incorretos.":/not confirmed/i.test(error.message)?"Usuário criado sem confirmação. No Supabase, abra o usuário e confirme o e-mail.":"Erro: "+error.message):await enter(data.user);if(msg){$("lErr").textContent=msg;$("lErr").classList.remove("hidden")}else{$("lErr").classList.add("hidden");$("lPass").value=""}};
+$("logoutBtn").onclick=async()=>{releaseCam();if(rtCh)db.removeChannel(rtCh);await db.auth.signOut();me=null;selectedCode="";selectedOrderId=null;products=[];cards=[];orders=[];paid=[];users=[];log=[];cashLog=[];tables={};snap={};$("loginOv").classList.remove("hidden")};
+$("userForm").onsubmit=async e=>{e.preventDefault();let login=$("uLogin").value.trim().toLowerCase();if(!/^[a-z0-9._-]{3,30}$/.test(login)||users.some(u=>u.login===login)){alert("Login inválido ou já existe (3 a 30 caracteres: letras minúsculas, números, ponto, hífen ou _).");return}
+ let{data,error}=await db2.auth.signUp({email:login+"@comandafacil.app",password:$("uPass").value});if(error||!data.user){alert("Erro ao criar perfil: "+(error?.message||"tente novamente"));return}
+ users.push({id:data.user.id,name:$("uName").value.trim(),login,role:$("uRole").value,active:true});save();e.target.reset();renderAll();alert("Perfil criado.")};
+(async()=>{try{let{data}=await db.auth.getSession();if(data.session){let m=await enter(data.session.user);if(m){$("lErr").textContent=m;$("lErr").classList.remove("hidden")}}else renderAll()}catch(e){fail(e,"conexão")}})();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
