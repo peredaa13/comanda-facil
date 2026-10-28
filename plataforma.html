@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>ComTap · Plataforma</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#101827;color:#111827;margin:0;padding:16px}
+.box{background:#fff;border-radius:14px;padding:18px;max-width:900px;margin:0 auto 14px}
+h1,h2{margin:0 0 10px}input,button{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;width:100%;box-sizing:border-box;margin:4px 0 10px}
+button{background:#f97316;color:#fff;border:0;cursor:pointer;font-weight:600}button.s{background:#e5e7eb;color:#111827}button.d{background:#dc2626}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #e5e7eb;font-size:14px}td button{width:auto;margin:0;padding:6px 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>div{flex:1;min-width:180px}.err{color:#b91c1c;font-size:14px}.ok{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:10px;margin-top:8px}
+.pill{padding:2px 8px;border-radius:99px;font-size:12px}.on{background:#dcfce7}.off{background:#fee2e2}
+</style></head><body>
+<div class="box" id="login"><h1>Plataforma ComTap</h1><p>Acesso do dono da plataforma.</p>
+<input id="em" type="email" placeholder="E-mail" autocomplete="username"><input id="pw" type="password" placeholder="Senha" autocomplete="current-password">
+<button id="go">Entrar</button><div class="err" id="err"></div></div>
+<div id="app" hidden>
+ <div class="box"><div class="row" style="align-items:center"><h1 style="flex:3">Restaurantes</h1><div><button class="s" id="out">Sair</button></div></div>
+  <div style="overflow-x:auto"><table><thead><tr><th>Nome</th><th>Código</th><th>Funcionários</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div></div>
+ <div class="box"><h2>Novo restaurante</h2>
+  <div class="row"><div><label>Nome</label><input id="nName" placeholder="Ex.: Pizzaria do João"></div><div><label>Código de acesso (sem espaços)</label><input id="nSlug" placeholder="pizzariadojoao"></div><div><label>Senha do administrador (mín. 6)</label><input id="nPass" type="text"></div></div>
+  <button id="mk">Criar restaurante</button><div id="res"></div></div>
+</div>
+<script>
+const URL_="https://wyvkohecollnxkycxcji.supabase.co",KEY="sb_publishable_KFRfrEf07hJKtiC_o9tERg_f_-vkMue";
+const db=supabase.createClient(URL_,KEY),db2=supabase.createClient(URL_,KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"cf_tmp2"}});
+const $=i=>document.getElementById(i),esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let list=[];
+async function gate(){let{data}=await db.rpc("is_platform_admin");if(data!==true){await db.auth.signOut();$("err").textContent="Esta conta não é administradora da plataforma.";return}
+ $("login").hidden=true;$("app").hidden=false;load()}
+async function load(){let[{data:rs},{data:st}]=await Promise.all([db.from("restaurants").select("*").order("created_at"),db.from("staff").select("id,rid")]);list=rs||[];let n={};(st||[]).forEach(x=>n[x.rid]=(n[x.rid]||0)+1);
+ $("rows").innerHTML=list.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.slug)}</td><td>${n[r.id]||0}</td><td><span class="pill ${r.active?"on":"off"}">${r.active?"Ativo":"Inativo"}</span></td><td><button class="${r.active?"d":"s"}" data-t="${r.id}">${r.active?"Desativar":"Reativar"}</button></td></tr>`).join("")||'<tr><td colspan="5">Nenhum restaurante.</td></tr>'}
+$("rows").onclick=async e=>{let b=e.target.closest("[data-t]");if(!b)return;let r=list.find(x=>x.id===b.dataset.t);if(!r||!confirm((r.active?"Desativar ":"Reativar ")+r.name+"? "+(r.active?"Ninguém desse restaurante conseguirá entrar.":"")))return;
+ let{error}=await db.from("restaurants").update({active:!r.active}).eq("id",r.id);if(error)alert(error.message);load()};
+$("go").onclick=async()=>{$("err").textContent="";let{error}=await db.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});if(error){$("err").textContent="Login ou senha incorretos.";return}gate()};
+$("out").onclick=async()=>{await db.auth.signOut();location.reload()};
+$("nName").oninput=()=>{if(!$("nSlug").dataset.m)$("nSlug").value=$("nName").value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"").slice(0,30)};
+$("nSlug").oninput=()=>$("nSlug").dataset.m=1;
+$("mk").onclick=async()=>{let name=$("nName").value.trim(),slug=$("nSlug").value.trim().toLowerCase(),pass=$("nPass").value;$("res").innerHTML="";
+ if(!name||!/^[a-z0-9-]{3,30}$/.test(slug)||pass.length<6){alert("Preencha o nome, um código (3 a 30 letras minúsculas, números ou hífen) e uma senha de 6+ caracteres.");return}
+ if(list.some(r=>r.slug===slug)){alert("Esse código já existe.");return}
+ let domain=slug+".comandafacil.app",{data:r,error:e1}=await db.from("restaurants").insert({name,slug,email_domain:domain}).select().single();if(e1){alert("Erro: "+e1.message);return}
+ let{data:u,error:e2}=await db2.auth.signUp({email:"admin@"+domain,password:pass});if(e2||!u.user){await db.from("restaurants").delete().eq("id",r.id);alert("Erro ao criar o administrador: "+(e2?.message||"tente de novo"));return}
+ let{error:e3}=await db.from("staff").insert({id:u.user.id,rid:r.id,data:{name:"Administrador",login:"admin",role:"admin",active:true}});if(e3){alert("Erro ao criar o perfil: "+e3.message);return}
+ $("res").innerHTML=`<div class="ok"><b>${esc(name)} criado.</b><br>Código do restaurante: <b>${esc(slug)}</b><br>Login: <b>admin</b><br>Senha: <b>${esc(pass)}</b><br>Entregue esses dados ao cliente e peça para trocar a senha.</div>`;
+ ["nName","nSlug","nPass"].forEach(i=>$(i).value="");delete $("nSlug").dataset.m;load()};
+(async()=>{let{data}=await db.auth.getSession();if(data.session)gate()})();
+</script></body></html>
